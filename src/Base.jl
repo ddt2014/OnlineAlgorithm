@@ -11,3 +11,9 @@ function Base.show(io::IO, o::OnlineAlgorithm)
         print(io, getfield(o, fields[i]), " | ")
     end
 end
+
+
+@generated function value(o::OnlineAlgorithm)
+    r = first(fieldnames(o))
+    return  :(o.$r)
+end

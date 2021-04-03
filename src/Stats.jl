@@ -1,34 +1,53 @@
-#-------------------------------------------------#  MinMax
+#-------------------------------------------------#  Min
 """
-    MinMax(T::Type = Float64)
-Track the overall min max.
+    Min(T::Type = Float64)
+Track the overall min.
 """
-mutable struct MinMax{T<:Number} <: OnlineAlgorithm{Number}
-    max::T
+mutable struct Min{T<:Number} <: OnlineAlgorithm{Number}
     min::T
-    arg_max::Int
     arg_min::Int
     n::Int
 end
-MinMax(T::Type) = MinMax(T(0), T(0), 0, 0, 0)
+Min(T::Type) = Min(T(0), 0, 0)
 
-function update!(o::MinMax{T}, x::Number) where {T<:Number}
+function update!(o::Min{T}, x::Number) where {T<:Number}
+    o.n += 1
+    x = convert(T, x)
+    if o.n == 1
+        o.min = x
+        o.arg_min = 1
+    end
+
+    if x < o.min
+        o.min = x
+        o.arg_min = o.n
+    end
+
+    return o
+end
+#-------------------------------------------------#  Max
+"""
+    Max(T::Type = Float64)
+Track the overall max.
+"""
+mutable struct Max{T<:Number} <: OnlineAlgorithm{Number}
+    max::T
+    arg_max::Int
+    n::Int
+end
+Max(T::Type) = Max(T(0), 0, 0)
+
+function update!(o::Max{T}, x::Number) where {T<:Number}
     o.n += 1
     x = convert(T, x)
     if o.n == 1
         o.max = x
         o.arg_max = 1
-        o.min = x
-        o.arg_min = 1
     end
 
     if x > o.max
         o.max = x
         o.arg_max = o.n
-    end
-    if x < o.min
-        o.min = x
-        o.arg_min = o.n
     end
 
     return o
@@ -80,11 +99,11 @@ Track the overall variance.
 """
 
 mutable struct Variance{T<:Number} <: OnlineAlgorithm{Number}
-    mean::Mean{T}
     variance::T
+    mean::Mean{T}
     n::Int
 end
-Variance(T::Type = Float64) = Variance(Mean(T), T(0), 0)
+Variance(T::Type = Float64) = Variance(T(0), Mean(T), 0)
 
 function update!(o::Variance{T}, x::Number) where {T<:Number}
     o.n += 1
@@ -92,7 +111,7 @@ function update!(o::Variance{T}, x::Number) where {T<:Number}
     if o.n > 1
         o.variance = (o.n - 2) / (o.n - 1) * o.variance + (x - o.mean.mean)^2 / o.n
     else
-        o.variance = x^2
+        o.variance = 0.0
     end
     o.mean = update!(o.mean, x)
     return o
@@ -105,12 +124,12 @@ Track the overall variance.
 """
 
 mutable struct Covariance{T<:Number} <: OnlineAlgorithm{Number}
+    covariance::T
     x_mean::Mean{T}
     y_mean::Mean{T}
-    covariance::T
     n::Int
 end
-Covariance(T::Type = Float64) = Covariance(Mean(T), Mean(T), T(0), 0)
+Covariance(T::Type = Float64) = Covariance(T(0), Mean(T), Mean(T), 0)
 
 function update!(o::Covariance{T}, x::Number, y::Number) where {T<:Number}
     o.n += 1
@@ -136,17 +155,20 @@ Track the overall variance.
 """
 
 mutable struct ConfidenceInterval{T<:Number} <: OnlineAlgorithm{Number}
+    interval::Dict{String, Float64}
     mean::Mean{T}
     variance::Variance{T}
-    interval::Dict{String, Float64}
     z::Float64
     n::Int
 end
 ConfidenceInterval(T::Type = Number; z::Float64) = (
     ConfidenceInterval(
-        Mean(T), Variance(T), Dict("lower_bound"=>0.0, "upper_bound"=>0.0), z, 0
+        Dict("lower_bound"=>0.0, "upper_bound"=>0.0), Mean(T), Variance(T), z, 0
     )
 )
+# function value(o::ConfidenceInterval)
+#     return  (o.interval["upper_bound"], o.interval["lower_bound"])
+# end
 
 function update!(o::ConfidenceInterval{T}, x::Number) where {T<:Number}
     o.n += 1
