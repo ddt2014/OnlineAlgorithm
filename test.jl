@@ -1,13 +1,15 @@
 using Test
 
-include("src/Base.jl")
-include("src/Stats.jl")
+include("src/base.jl")
+include("src/stats.jl")
+include("src/linear_regression.jl")
+
 
 x_data_path = "./test/data/x_data.txt"
 y_data_path = "./test/data/y_data.txt"
+z_data_path = "./test/data/3.14x+e_data.txt"
 
 open(x_data_path) do x_stream
-
     sum = Sum(Float64)
     min = Min(Float64)
     max = Max(Float64)
@@ -55,8 +57,34 @@ open(x_data_path) do x_stream
 #------------------------------------------------------------# ConfidenceInterval
     @testset "ConfidenceInterval" begin
         println(ci)
-        @test value(ci)["lower_bound"] ≈ -0.002054
-        @test value(ci)["upper_bound"] ≈ 0.001864
+        @test value(ci)["lower_bound"] ≈ -0.0020535707
+        @test value(ci)["upper_bound"] ≈ 0.0018650241918
     end
 
+end
+
+
+# ------------------------------------------------------------# LinearRegression1D
+@testset "LinearRegression1D" begin
+    lin_reg_1d = LinearRegression1D(Float64)
+    x_data = randn(1000000)
+    y_data = x_data * pi + randn(1000000)
+    for (x, y) in zip(x_data, y_data)
+        lin_reg_1d = update!(lin_reg_1d, x, y)
+    end
+    println(lin_reg_1d)
+    @test round(value(lin_reg_1d), digits=2) == 3.14
+end
+
+
+# ------------------------------------------------------------# LinearRegression
+@testset "LinearRegression" begin
+    lin_reg = LinearRegression()
+    x_data = randn(1000000, 6)
+    y_data = x_data * (1:6) + randn(1000000)
+    for xy in zip(eachrow(x_data), y_data)
+        lin_reg = update!(lin_reg, xy)
+    end
+    println(lin_reg)
+    @test round.(value(lin_reg)) == collect(1.0:6.0)
 end

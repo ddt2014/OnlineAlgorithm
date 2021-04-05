@@ -25,6 +25,8 @@ function update!(o::Min{T}, x::Number) where {T<:Number}
 
     return o
 end
+
+
 #-------------------------------------------------#  Max
 """
     Max(T::Type = Float64)
@@ -53,6 +55,7 @@ function update!(o::Max{T}, x::Number) where {T<:Number}
     return o
 end
 
+
 #-------------------------------------------------#  Sum
 """
     Sum(T::Type = Float6)
@@ -73,6 +76,7 @@ function update!(o::Sum{T}, x::Number) where {T<:Number}
     return o
 end
 
+
 #-------------------------------------------------#  mean
 """
     Mean(T::Type = Float6)
@@ -91,6 +95,7 @@ function update!(o::Mean{T}, x::Number) where {T<:Number}
     o.mean = o.mean + (x - o.mean) / o.n
     return o
 end
+
 
 #-------------------------------------------------#  variance
 """
@@ -116,6 +121,7 @@ function update!(o::Variance{T}, x::Number) where {T<:Number}
     o.mean = update!(o.mean, x)
     return o
 end
+
 
 #-------------------------------------------------#  covariance
 """
@@ -148,6 +154,7 @@ function update!(o::Covariance{T}, x::Number, y::Number) where {T<:Number}
     return o
 end
 
+
 #-------------------------------------------------#  confidence interval
 """
     ConfidenceInterval(T::Type = Float64, )
@@ -166,9 +173,6 @@ ConfidenceInterval(T::Type = Number; z::Float64) = (
         Dict("lower_bound"=>0.0, "upper_bound"=>0.0), Mean(T), Variance(T), z, 0
     )
 )
-# function value(o::ConfidenceInterval)
-#     return  (o.interval["upper_bound"], o.interval["lower_bound"])
-# end
 
 function update!(o::ConfidenceInterval{T}, x::Number) where {T<:Number}
     o.n += 1
